@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { login } = require('../../helpers/login.js');
 const loginData = require('../../fixtures/login.json');
 
-describe.only('Mutation - Login', () => {
+describe('Mutation - Login', () => {
   it('deve realizar login com sucesso quando informo credenciais válidas', async () => {
     const resposta = await login(loginData.admin);
 
