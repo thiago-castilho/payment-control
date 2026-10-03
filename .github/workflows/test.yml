@@ -36,14 +36,10 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Configurar variáveis de ambiente
-        run: cp .env.example .env
-
-      - name: Iniciar API
-        run: npm start &
-
-      - name: Aguardar API ficar disponível
-        run: npm run wait:api
+      - name: Iniciar e aguardar API
+        run: |
+          npm start &
+          npx wait-on tcp:${{ env.HOST }}:${{ env.PORT }} --timeout 30000
 
       - name: Executar testes
         run: npm test
