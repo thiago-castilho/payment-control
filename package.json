@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "mocha test/spec/**/*.js"
+    "test": "mocha test/spec/**/*.js",
+    "wait:api": "wait-on http://localhost:4000/graphql --timeout 30000"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
@@ -23,6 +24,7 @@
     "@faker-js/faker": "^10.6.0",
     "chai": "^6.2.2",
     "mocha": "^12.0.2",
-    "supertest": "^7.3.0"
+    "supertest": "^7.3.0",
+    "wait-on": "^9.5.1"
   }
 }

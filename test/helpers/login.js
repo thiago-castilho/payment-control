@@ -1,35 +1,14 @@
-const request = require('supertest');
-
-const BASE_URL = process.env.BASE_URL || 'http://localhost:4000';
+const apiClient = require('../clients/apiClient.js');
+const environment = require('../config/environment.js');
 
 /**
  * Executa a mutation GraphQL de login.
  *
- * @param {object} variables - Variáveis utilizadas no login.
+ * @param {object} variables - Credenciais utilizadas no login.
  * @param {string} variables.email - E-mail do usuário.
  * @param {string} variables.senha - Senha do usuário.
- * @param {string} [dadosDeRetorno=''] - Campos adicionais que devem ser retornados.
+ * @param {string} [dadosDeRetorno=''] - Campos adicionais retornados pela mutation.
  * @returns {Promise<import('supertest').Response>} Resposta da requisição.
- *
- * @example
- * const resposta = await login({
- *   email: 'admin@admin.com',
- *   senha: '123456'
- * });
- *
- * @example
- * const resposta = await login(
- *   {
- *     email: 'admin@admin.com',
- *     senha: '123456'
- *   },
- *   `
- *     usuario {
- *       nome
- *       email
- *     }
- *   `
- * );
  */
 async function login(variables, dadosDeRetorno = '') {
   const query = `
@@ -41,12 +20,13 @@ async function login(variables, dadosDeRetorno = '') {
     }
   `;
 
-  return request(BASE_URL)
-    .post('/graphql')
+  return apiClient
+    .post(environment.graphqlPath)
     .send({
       query,
       variables
-    });
+    })
+    .timeout(environment.requestTimeout);
 }
 
 module.exports = {
