@@ -1,57 +1,98 @@
 const { expect } = require('chai');
+
 const { login } = require('../../helpers/login.js');
+
 const loginData = require('../../fixtures/login.json');
+const dadosDoUsuario = require('../../data/dadosDoUsuario.js');
 
 describe('Mutation - Login', () => {
   it('deve realizar login com sucesso quando informo credenciais válidas', async () => {
     const resposta = await login(loginData.admin);
 
     expect(resposta.status).to.equal(200);
-    expect(resposta.body.data.login).to.have.property('token');
-    expect(resposta.body.data.login.token).to.not.be.empty;
-    expect(resposta.body.data.login.token).to.be.a('string');
-    expect(resposta.body.data.login.token).to.include('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
+    expect(resposta.body.errors).to.not.exist;
+
+    const usuarioLogado = resposta.body.data.login;
+
+    expect(usuarioLogado).to.have.property('token');
+    expect(usuarioLogado.token).to.be.a('string').and.not.be.empty;
+    expect(usuarioLogado.token.split('.')).to.have.lengthOf(3);
   });
 
   it('não deve realizar login quando informo credenciais inválidas', async () => {
-    const usuario = { ...loginData.admin, senha: "1234567" };
+    const usuario = {
+      ...loginData.admin,
+      senha: '1234567'
+    };
+
     const resposta = await login(usuario);
 
     expect(resposta.status).to.equal(200);
-    expect(resposta.body.errors[0]).to.have.property('message', 'Credenciais inválidas ou usuário inativo.');
+    expect(resposta.body.data).to.not.exist;
+    expect(resposta.body.errors)
+      .to.be.an('array')
+      .that.is.not.empty;
 
+    const [erro] = resposta.body.errors;
+
+    expect(erro.message).to.equal(
+      'Credenciais inválidas ou usuário inativo.'
+    );
   });
 
-  it('deve realizar login com sucesso e retornar nome e email do usuario', async () => {
-    const dadosDeRetorno = `usuario {
-              nome
-              email
-            }`;
-    const resposta = await login(loginData.admin, dadosDeRetorno);
+  it('deve realizar login com sucesso e retornar nome e email do usuário', async () => {
+    const resposta = await login(
+      loginData.admin,
+      dadosDoUsuario.nomeEEmail
+    );
 
     expect(resposta.status).to.equal(200);
-    expect(resposta.body.data.login.usuario).to.have.property('email', 'admin@admin.com');
-    expect(resposta.body.data.login.usuario).to.have.property('nome', 'ADMIN');
+    expect(resposta.body.errors).to.not.exist;
+
+    const usuario = resposta.body.data.login.usuario;
+
+    expect(usuario).to.include({
+      email: loginData.admin.email,
+      nome: 'ADMIN'
+    });
   });
 
-  it('deve realizar login com sucesso e retornar o id do usuario e informar se ele está ativo', async () => {
-    const dadosDeRetorno = `usuario {
-      id
-      ativo
-    }`;
-    const resposta = await login(loginData.admin, dadosDeRetorno);
+  it('deve realizar login com sucesso e retornar id e status do usuário', async () => {
+    const resposta = await login(
+      loginData.admin,
+      dadosDoUsuario.idEAtivo
+    );
 
     expect(resposta.status).to.equal(200);
-    expect(resposta.body.data.login.usuario).to.have.property('ativo', true);
-    expect(resposta.body.data.login.usuario).to.have.property('id', "00000000-0000-4000-8000-000000000001");
+    expect(resposta.body.errors).to.not.exist;
 
+    const usuario = resposta.body.data.login.usuario;
+
+    expect(usuario).to.include({
+      ativo: true,
+      id: '00000000-0000-4000-8000-000000000001'
+    });
   });
 
   it('não deve realizar login quando não informo o email', async () => {
-    const { email, ...usuario } = loginData.admin
-    const resposta = await login(usuario)
+    const { email, ...usuarioSemEmail } = loginData.admin;
+
+    const resposta = await login(usuarioSemEmail);
 
     expect(resposta.status).to.equal(400);
-    expect(resposta.body.errors[0]).to.have.property('message', 'Variable "$email" of required type "String!" was not provided.');
+    expect(resposta.body.data).to.not.exist;
+    expect(resposta.body.errors)
+      .to.be.an('array')
+      .that.is.not.empty;
+
+    const [erro] = resposta.body.errors;
+
+    expect(erro.message).to.include(
+      'Variable "$email" of required type "String!"'
+    );
+
+    expect(erro.message).to.include(
+      'was not provided'
+    );
   });
-}); 
+});
